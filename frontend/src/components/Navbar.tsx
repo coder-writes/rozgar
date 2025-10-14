@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Briefcase, BookOpen, Users, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Progress } from "./ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, profile, logout } = useAuth();
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -86,7 +87,31 @@ export const Navbar = () => {
                       </p>
                     </div>
                   </DropdownMenuLabel>
+                  
+                  {/* Profile Completion Indicator */}
+                  {profile && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-muted-foreground">Profile</span>
+                          <span className="text-xs font-medium">{profile.profileCompletion}%</span>
+                        </div>
+                        <Progress value={profile.profileCompletion} className="h-1.5" />
+                        {profile.profileCompletion < 100 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Complete your profile
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/jobs")}>
                     <Briefcase className="mr-2 h-4 w-4" />
                     <span>Jobs</span>

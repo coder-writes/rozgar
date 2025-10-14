@@ -4,21 +4,21 @@ import userModel from '../models/userModel.js';
 import transporter from '../config/nodemailer.js'; 
 
 export const register =async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if(!name || !email || !password) {
         return res.json({success: false, message:'Missing Details'})
     }  
-    
     try{
         const existingUser = await userModel.findOne({ email });
         if(existingUser) {
             return res.json({success: false, message: 'User already exists'});
         }
+        console.log("laude yaha tak phuch gye ho");
         const hashedPassword =await bcrypt.hash(password, 10); 
         // password: the plain-text string you want to protect (e.g. the user’s submitted password).
         // Internally, bcrypt generates a salt and then hashes your password + salt together.
-        const user = new userModel({name, email, password: hashedPassword});
+        const user = new userModel({name, email, password: hashedPassword,role});
         await user.save();
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -34,15 +34,27 @@ export const register =async (req, res) => {
         const mailOptions = {
             from: process.env.SENDER_EMAIL,
             to: email,
-            subject: 'Welcome to CodeCrux',
-            text: `Hi ${name},\n\nWelcome to CodeCrux! We're excited to have you on board. If you have any questions or need assistance, feel free to reach out.\n\nBest regards,\nThe CodeCrux Team`
+            subject: 'Welcome to Rozgar',
+            text: `Hi ${name},\n\nWelcome to Rozgar! We're excited to have you on board. Please verify your email to get started.\n\nBest regards,\nThe Rozgar Team`
         };
 
         await transporter.sendMail(mailOptions);    
 
-        return res.json({ success: true });
+        return res.json({ 
+            success: true, 
+            message: 'User registered successfully',
+            tempToken: token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isAccountVerified
+            }
+        });
     }
     catch(err) {
+        console.log("Registration error:", err);
         res.json({success: false, message: err.message})
     }
 }
@@ -74,7 +86,19 @@ export const login = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 
         });
 
-        return res.json({ success: true});
+        return res.json({ 
+            success: true,
+            message: 'Login successful',
+            token: token,
+            tempToken: user.isAccountVerified ? null : token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isAccountVerified
+            }
+        });
     }
     catch(err) {
         res.json({success: false, message: err.message})
@@ -100,11 +124,11 @@ export const logout = (req, res) => {
 // in req.body there is No "userId" so by cookie we will get userId
 export const sendVerifyOtp = async (req, res) => {
     try {
-        // Get userId from middleware (either req.user.id or req.body.userId)
-        const userId = req.user?.id || req.body?.userId;
+        // Get userId from middleware (req.user.id is set by userAuth middleware)
+        const userId = req.user?.id;
         
         if (!userId) {
-            return res.json({ success: false, message: 'User ID not found. Please login again.' });
+            return res.json({ success: false, message: 'Not Authorized. Login Again' });
         }
 
         const user = await userModel.findById(userId);
@@ -129,13 +153,14 @@ export const sendVerifyOtp = async (req, res) => {
             from: process.env.SENDER_EMAIL,
             to: user.email,
             subject: 'Account Verification OTP',
-            text: `Your OTP code is ${otp}. It is valid for 5 minutes.`
+            text: `Your OTP code is ${otp}. It is valid for 5 minutes.\n\nIf you didn't request this, please ignore this email.`
         };
 
         await transporter.sendMail(mailOption);
 
         return res.json({ success: true, message: 'Verification OTP sent on Email' });
     } catch(err) {
+        console.error('Send OTP error:', err);
         return res.json({ success: false, message: err.message });
     }
 }
@@ -143,7 +168,9 @@ export const sendVerifyOtp = async (req, res) => {
 // Verify Email using OTP
 export const verifyEmail = async (req, res) => {
     try {
-        const { userId, otp } = req.body;
+        const { otp } = req.body;
+        const userId = req.user?.id;
+        
         if(!userId || !otp) {
             return res.json({ success: false, message: 'Missing Details' });
         }
@@ -167,8 +194,30 @@ export const verifyEmail = async (req, res) => {
         user.verifyOtpExpireAt = 0;
         await user.save();
 
-        return res.json({ success: true, message: 'Email Verified Successfully' });
+        // Generate new token for verified user
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+        res.cookie('token', token, {
+            httpOnly:true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+        });
+
+        return res.json({ 
+            success: true, 
+            message: 'Email Verified Successfully',
+            token: token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isAccountVerified
+            }
+        });
     } catch(err) {
+        console.error('Verify email error:', err);
         return res.json({ success: false, message: err.message });
     }
 }
