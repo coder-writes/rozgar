@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from "@/lib/api";
 import { Briefcase, Mail, Lock, User, Loader2 } from "lucide-react";
+import heroImage from "@/assets/hero-image.jpg";
 import axios from "axios";
 
 const Auth = () => {
@@ -23,6 +24,7 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [role, setRole] = useState<"seeker" | "recruiter">("seeker");
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -179,160 +181,262 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <Briefcase className="h-10 w-10 text-primary" />
-            <span className="text-3xl font-bold text-foreground">Rozgar</span>
-          </Link>
-          <p className="text-muted-foreground">Connect with opportunities in your community</p>
+    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-6">
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        {/* Visual Panel - Order changes based on active tab */}
+        <div 
+          className={`hidden md:flex flex-col items-start justify-center space-y-6 px-6 transition-all duration-500 ${
+            activeTab === "signup" ? "md:order-1" : "md:order-2"
+          }`}
+        >
+          <div className="relative w-full">
+            <img
+              src={heroImage}
+              alt="Professional workspace"
+              className="w-full rounded-lg shadow-md object-cover h-72"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-lg" />
+            <div className="absolute bottom-6 left-6 right-6">
+              <h3 className="text-2xl font-semibold text-white">Join thousands finding work nearby</h3>
+              <p className="text-sm text-white/90 mt-2">Real opportunities. Real people. Real results.</p>
+            </div>
+          </div>
+          <div className="space-y-4 w-full">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Browse verified listings</p>
+                <p className="text-xs text-muted-foreground">All employers are background-checked</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Connect directly</p>
+                <p className="text-xs text-muted-foreground">No middlemen, faster hiring process</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Local opportunities</p>
+                <p className="text-xs text-muted-foreground">Find work in your neighborhood</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card className="p-6 shadow-lg">
-          <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+        {/* Auth Card - Order changes based on active tab */}
+        <div 
+          className={`w-full max-w-md mx-auto transition-all duration-500 ${
+            activeTab === "signup" ? "md:order-2" : "md:order-1"
+          }`}
+        >
+          <div className="text-center mb-6">
+            <Link to="/" className="inline-flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
+              <Briefcase className="h-10 w-10 text-primary" />
+              <span className="text-2xl font-bold text-foreground">Rozgar</span>
+            </Link>
+            <p className="text-sm text-muted-foreground">Your path to better opportunities</p>
+          </div>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
+          <Card className="p-6 shadow-lg">
+            <Tabs defaultValue={defaultTab} className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="signin">Sign in</TabsTrigger>
+                <TabsTrigger value="signup">Sign up</TabsTrigger>
+              </TabsList>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    "Sign In"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="John Doe"
-                      className="pl-10"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
+              <TabsContent value="signin">
+                <form onSubmit={handleSignIn} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email" className="text-sm font-medium">
+                      Email address
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="signin-password" className="text-sm font-medium">
+                        Password
+                      </Label>
+                      <Link 
+                        to="/forgot-password" 
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Forgot?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signin-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        className="pl-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>I am a</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      type="button"
-                      variant={role === "seeker" ? "default" : "outline"}
-                      onClick={() => setRole("seeker")}
+                  <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Signing you in
+                      </>
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
+
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link to="/jobs">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
                       className="w-full"
                     >
-                      Job Seeker
+                      Browse jobs without signing in
                     </Button>
-                    <Button
-                      type="button"
-                      variant={role === "recruiter" ? "default" : "outline"}
-                      onClick={() => setRole("recruiter")}
-                      className="w-full"
-                    >
-                      Recruiter
-                    </Button>
+                  </Link>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name" className="text-sm font-medium">
+                      Your name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="e.g., Priya Sharma"
+                        className="pl-10"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating account...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-sm font-medium">
+                      Work email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="priya@example.com"
+                        className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">We'll send a verification code here</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-sm font-medium">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="Use 8+ characters"
+                        className="pl-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={8}
+                      />
+                    </div>
+                  </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </p>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Account type</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        type="button"
+                        variant={role === "seeker" ? "default" : "outline"}
+                        onClick={() => setRole("seeker")}
+                        className="w-full h-auto py-3 flex flex-col items-center gap-1"
+                      >
+                        <span className="font-medium">Looking for work</span>
+                        <span className="text-xs opacity-80">Job seeker</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={role === "recruiter" ? "default" : "outline"}
+                        onClick={() => setRole("recruiter")}
+                        className="w-full h-auto py-3 flex flex-col items-center gap-1"
+                      >
+                        <span className="font-medium">Hiring talent</span>
+                        <span className="text-xs opacity-80">Recruiter</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Setting up your account
+                      </>
+                    ) : (
+                      "Get started"
+                    )}
+                  </Button>
+
+                  <p className="text-xs text-muted-foreground text-center leading-relaxed pt-2">
+                    By signing up, you agree to our{" "}
+                    <Link to="/terms" className="underline hover:text-foreground">Terms</Link>
+                    {" "}and{" "}
+                    <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
+                  </p>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </Card>
+
+          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-4">
+            <Link to="/help" className="hover:text-foreground hover:underline transition-colors">Help Center</Link>
+            <span>•</span>
+            <Link to="/contact" className="hover:text-foreground hover:underline transition-colors">Contact Us</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

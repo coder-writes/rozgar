@@ -175,7 +175,7 @@ const Profile = () => {
       
       // Append resume file if exists
       if (formData.resume) {
-        apiFormData.append('resume', formData.resume);
+        apiFormData.append('resume', formData.resume.name);
       }
 
       // Make API call

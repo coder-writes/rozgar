@@ -150,7 +150,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
 // @access  Public
 router.get('/:email', async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.params.email, isActive: true });
+    const user = await User.findOne({ email: req.params.email});
 
     if (!user) {
       return res.status(404).json({
