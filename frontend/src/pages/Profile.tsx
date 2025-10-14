@@ -29,11 +29,10 @@ import axios from "axios";
 
 const Profile = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, profile, fetchProfile, updateProfile, isProfileLoading } = useAuth();
   const [isEditing, setIsEditing] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -42,59 +41,68 @@ const Profile = () => {
     experience: "",
     skills: [] as string[],
     resume: null as File | null,
+    resumeInfo: null as { filename: string; path: string } | null, // Store resume metadata separately
   });
   
   const [currentSkill, setCurrentSkill] = useState("");
   
-  // Load existing profile data when component mounts
+  // Load existing profile data from global state when component mounts
   useEffect(() => {
     const loadProfile = async () => {
       if (user?.email) {
-        try {
-          const response = await fetch(API_ENDPOINTS.PROFILE_BY_EMAIL(user.email));
-          const data = await response.json();
-          
-          if (response.ok && data.success && data.data) {
-            const profile = data.data;
-            setFormData({
-              name: profile.name || "",
-              email: profile.email || "",
-              location: profile.location || "",
-              experience: profile.workExperience || "",
-              skills: profile.skills || [],
-              resume: profile.resume || null, // We don't load the file, just show it exists
-            });
+        // Fetch profile if not already loaded
+        if (!profile) {
+          await fetchProfile();
+        } else {
+          // Use profile from global state
+          setFormData({
+            name: profile.name || "",
+            email: profile.email || "",
+            location: profile.location || "",
+            experience: profile.workExperience || "",
+            skills: profile.skills || [],
+            resume: null, // File object not stored
+            resumeInfo: profile.resume ? { 
+              filename: profile.resume.filename || "", 
+              path: profile.resume.path || "" 
+            } : null,
+          });
 
-            setProfileCompletion(profile.profileCompletion || 0);
-            setIsEditing(false); // Start in view mode if profile exists
-        const sendEmail = axios.post("");
-
-          } else {
-            // Profile doesn't exist yet, use user data for initial values
-            setFormData(prev => ({
-              ...prev,
-              name: user.name || "",
-              email: user.email || "",
-            }));
-          }
-        } catch (error) {
-          console.error('Error loading profile:', error);
-          // Use user data as fallback
-          setFormData(prev => ({
-            ...prev,
-            name: user.name || "",
-            email: user.email || "",
-          }));
-        } finally {
-          setIsLoading(false);
+          setProfileCompletion(profile.profileCompletion || 0);
+          setIsEditing(false); // Start in view mode if profile exists
         }
-      } else {
-        setIsLoading(false);
       }
     };
     
     loadProfile();
-  }, [user]);
+  }, [user, profile, fetchProfile]);
+
+  // Update form when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        email: profile.email || "",
+        location: profile.location || "",
+        experience: profile.workExperience || "",
+        skills: profile.skills || [],
+        resume: null, // File object not stored
+        resumeInfo: profile.resume ? { 
+          filename: profile.resume.filename || "", 
+          path: profile.resume.path || "" 
+        } : null,
+      });
+      setProfileCompletion(profile.profileCompletion || 0);
+      setIsEditing(false);
+    } else if (user && !isProfileLoading) {
+      // No profile exists, use user data
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+      }));
+    }
+  }, [profile, user, isProfileLoading]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -189,6 +197,14 @@ const Profile = () => {
           setProfileCompletion(data.data.profileCompletion);
         }
         
+        // Update global state with new profile data
+        if (data.data) {
+          updateProfile(data.data);
+        } else {
+          // Refetch profile to ensure global state is in sync
+          await fetchProfile();
+        }
+        
         setIsEditing(false);
       } else {
         throw new Error(data.message || 'Failed to save profile');
@@ -215,7 +231,7 @@ const Profile = () => {
   };
   
   // Show loading state
-  if (isLoading) {
+  if (isProfileLoading) {
     return (
       <div className="min-h-screen bg-gradient-subtle">
         <Navbar />
