@@ -1,4 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import connectDB from './config/mongodb.js';
+import authRouter from './routes/authRoutes.js';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -8,9 +14,30 @@ import profileRoutes from './routes/profile.js';
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rozgar';
+connectDB();
+
+const allowedOrigins = ['http://localhost:5173'];
+
+app.use(express.json());
+app.use(cookieParser());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+//  API EndPoints
+app.get('/', (req, res) => { res.send('API Working'); });
+app.use('/api/auth', authRouter);
+
 
 // Middleware
 app.use(cors());
