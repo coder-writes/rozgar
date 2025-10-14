@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Mail, Lock, User } from "lucide-react";
+import { API_ENDPOINTS } from "@/lib/api";
+import { Briefcase, Mail, Lock, User, Loader2 } from "lucide-react";
+import axios from "axios";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -32,18 +34,75 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      await login(email, password);
+      const response = await axios.post(
+        API_ENDPOINTS.AUTH_LOGIN,
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true
+        }
+      );
+
+      const data = response.data;
+
+      if (!response.status || !data.success) {
+        throw new Error(data.message || "Failed to sign in");
+      }
+
+      // Check if email is verified
+      if (!data.user.isVerified) {
+        toast({
+          title: "Email not verified",
+          description: "Please verify your email before signing in.",
+          variant: "destructive",
+        });
+
+        // Send OTP for verification
+        const otpResponse = await axios.post(
+          API_ENDPOINTS.AUTH_SEND_VERIFY_OTP,
+          {},  // Empty body, auth via cookie
+          {
+            withCredentials: true
+          }
+        );
+
+        if (otpResponse.status === 200) {
+          navigate("/verify-otp", {
+            state: {
+              email,
+              tempToken: data.tempToken,
+            },
+            replace: true,
+          });
+        }
+        return;
+      }
+
+      // Store authentication token and user data
+      if (data.token) {
+        localStorage.setItem("rozgar_token", data.token);
+      }
+      if (data.user) {
+        localStorage.setItem("rozgar_user", JSON.stringify(data.user));
+      }
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
+
+      // Update auth context
+      await login(email, password);
       navigate("/jobs");
     } catch (error) {
+      console.error("Sign in error:", error);
       toast({
         title: "Error",
-        description: "Failed to sign in. Please try again.",
+        description: error?.response?.data?.message || error.message || "Failed to sign in. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -54,18 +113,64 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      await signup(name, email, password, role);
+      // Step 1: Register user
+      const registerResponse = await axios.post(
+        API_ENDPOINTS.AUTH_REGISTER,
+        {
+          name,
+          email,
+          password,
+          role,
+        },
+        {
+          withCredentials: true
+        }
+      );
+
+      const registerData = registerResponse.data;
+      
+      if (!registerResponse.status || !registerData.success) {
+        throw new Error(registerData.message || "Failed to create account");
+      }
+      
+      console.log("Registration successful:", registerData);
+      
+      // Step 2: Send OTP for verification (cookie is already set from registration)
+      const otpResponse = await axios.post(
+        API_ENDPOINTS.AUTH_SEND_VERIFY_OTP,
+        {},  // Empty body, auth is via cookie
+        {
+          withCredentials: true  // Important: sends cookie with request
+        }
+      );
+      
+      const otpData = otpResponse.data;
+      console.log("OTP response:", otpData);
+
+      if (!otpResponse.status || !otpData.success) {
+        throw new Error(otpData.message || "Failed to send verification code");
+      }
+
       toast({
         title: "Account created!",
-        description: "Welcome to Rozgar Pulse.",
+        description: "Please check your email for the verification code.",
       });
-      navigate("/jobs");
+
+      // Navigate to OTP verification page
+      navigate("/verify-otp", {
+        state: {
+          email,
+          tempToken: registerData.tempToken,
+        },
+        replace: true,
+      });
     } catch (error) {
+      console.error("Sign up error:", error);
       toast({
         title: "Error",
-        description: "Failed to create account. Please try again.",
+        description: error?.response?.data?.message || error.message || "Failed to create account. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -126,7 +231,14 @@ const Auth = () => {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -204,7 +316,14 @@ const Auth = () => {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </form>
             </TabsContent>

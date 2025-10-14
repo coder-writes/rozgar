@@ -1,32 +1,31 @@
 import 'dotenv/config';
 import express from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import connectDB from './config/mongodb.js';
 import authRouter from './routes/authRoutes.js';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import profileRoutes from './routes/profile.js';
 
 // Load environment variables
-dotenv.config();
+// dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 connectDB();
 
-const allowedOrigins = ['http://localhost:5173'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:8080'];
 
-app.use(express.json());
-app.use(cookieParser());
+// Middleware - CORS must be before routes
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
@@ -35,37 +34,17 @@ app.use(session({
 }));
 
 //  API EndPoints
-app.get('/', (req, res) => { res.send('API Working'); });
-app.use('/api/auth', authRouter);
-
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Connect to MongoDB
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB successfully');
-  })
-  .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
-    process.exit(1);
-  });
-
-// Routes
-app.get('/', (req, res) => {
+app.get('/', (req, res) => { 
   res.json({
     message: 'Rozgar API is running',
     version: '1.0.0',
     endpoints: {
+      auth: '/api/auth',
       profile: '/api/profile',
     },
   });
 });
-
+app.use('/api/auth', authRouter);
 app.use('/api/profile', profileRoutes);
 
 // Error handling middleware
