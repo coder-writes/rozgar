@@ -240,14 +240,22 @@ const Auth = () => {
             <p className="text-sm text-muted-foreground">Your path to better opportunities</p>
           </div>
 
-          <Card className="p-6 shadow-lg">
+          <Card className="p-6 shadow-lg overflow-hidden">
             <Tabs defaultValue={defaultTab} className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
                 <TabsTrigger value="signup">Sign up</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
+              <div className="relative min-h-[450px]">
+                <TabsContent 
+                  value="signin" 
+                  className={`transition-all duration-500 ease-in-out ${
+                    activeTab === "signin" 
+                      ? "translate-x-0 opacity-100" 
+                      : "-translate-x-full opacity-0 absolute inset-0 pointer-events-none"
+                  }`}
+                >
                 <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email" className="text-sm font-medium">
@@ -327,7 +335,14 @@ const Auth = () => {
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup">
+              <TabsContent 
+                value="signup"
+                className={`transition-all duration-500 ease-in-out ${
+                  activeTab === "signup" 
+                    ? "translate-x-0 opacity-100" 
+                    : "translate-x-full opacity-0 absolute inset-0 pointer-events-none"
+                }`}
+              >
                 <form onSubmit={handleSignUp} className="space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name" className="text-sm font-medium">
@@ -428,6 +443,7 @@ const Auth = () => {
                   </p>
                 </form>
               </TabsContent>
+              </div>
             </Tabs>
           </Card>
 
