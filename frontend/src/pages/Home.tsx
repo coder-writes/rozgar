@@ -52,7 +52,7 @@ const Home = () => {
               <div className="flex flex-wrap gap-4 animate-fade-in-up animation-delay-400">
                 <div className="flex items-center gap-2 text-primary-foreground/90">
                   <CheckCircle2 className="h-5 w-5 text-accent" />
-                  <span className="text-sm font-medium">1000+ Active Jobs</span>
+                  <span className="text-sm font-medium">Active Jobs</span>
                 </div>
                 <div className="flex items-center gap-2 text-primary-foreground/90">
                   <CheckCircle2 className="h-5 w-5 text-accent" />
@@ -103,7 +103,7 @@ const Home = () => {
                     ))}
                   </div>
                   <p className="text-sm text-primary-foreground/80">
-                    <span className="font-bold">5,000+</span> professionals joined
+                    <span className="font-bold">many</span> professionals have joined
                   </p>
                 </div>
               </div>
