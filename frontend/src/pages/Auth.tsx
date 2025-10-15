@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_ENDPOINTS } from "@/lib/api";
 import { Briefcase, Mail, Lock, User, Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
+import logoImage from "@/assets/gar (1).png";
 import axios from "axios";
 
 const Auth = () => {
@@ -234,8 +235,7 @@ const Auth = () => {
         >
           <div className="text-center mb-6">
             <Link to="/" className="inline-flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
-              <Briefcase className="h-10 w-10 text-primary" />
-              <span className="text-2xl font-bold text-foreground">Rozgar</span>
+              <img src={logoImage} alt="Rozgar Logo" className="h-16 w-32 object-contain" />
             </Link>
             <p className="text-sm text-muted-foreground">Your path to better opportunities</p>
           </div>

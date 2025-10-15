@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Briefcase, BookOpen, Users, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
+import logoImage from "@/assets/gar (1).png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "./ui/progress";
 import {
@@ -30,8 +31,7 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <Briefcase className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-foreground">Rozgar</span>
+            <img src={logoImage} alt="Rozgar Logo" className="h-16 w-28 object-contain" />
           </Link>
           
           {isAuthenticated && (

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Briefcase, Mail, MapPin, Phone, Twitter, Linkedin, Github, Instagram } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import logoImage from "@/assets/gar (1).png";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -13,15 +14,7 @@ export const Footer = () => {
           {/* Brand Section */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
-                  <Briefcase className="h-5 w-5 text-white" />
-                </div>
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Rozgar Pulse
-              </span>
+              <img src={logoImage} alt="Rozgar Logo" className="h-8 w-14 object-contain" />
             </Link>
             <p className="text-sm text-muted-foreground">
               Empowering local talent and connecting opportunities. Your career journey starts here.
